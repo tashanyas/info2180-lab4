@@ -1,26 +1,41 @@
-window.onload = function(){
-    var search = document.querySelector("button");
-    var result = document.querySelector(".result");
-    var query = document.querySelector("input");
-    search.addEventListener('click', handleClick);
-    var httpRequest = new XMLHttpRequest();
-    
-    function handleClick(clickEvent){
-        clickEvent.preventDefault();
-        var url = "superheroes.php?query=" + query.value;
-        httpRequest.onreadystatechange = fetchingdata;
-        httpRequest.open('GET', url, true);
-        httpRequest.send();
-    }
-    function fetchingdata(){
-        if (httpRequest.readyState === XMLHttpRequest.DONE){
-            if (httpRequest.status === 200){
-                var response = httpRequest.responseText;
-                result.innerHTML = response;
-            }
-            else{
-                result.innerHTML = "Error: This resquest can not be deliver. Please try again.";
-            }
+(() => {
+    const form = document.getElementById("superhero_form")
+    if (!form)
+        return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+
+        const data = new FormData(form)
+        const DATA_REGEX = /[a-zA-Z\s]+/g
+
+        // Filter unwanted characters
+        const name = data.get("name") ? data.get("name").match(DATA_REGEX).join('') : ""
+        const res = await fetch(`superheroes.php?query=${name}`)
+
+        const resultDiv = document.getElementById("result")
+        if (!resultDiv)
+            return;
+
+        if (!res.ok) {
+            resultDiv.innerHTML = "<p class=\"error-msg\">Superhero not found</p>"
+            return;
         }
-    }
-}
+
+        const fetchedData = await res.json()
+        if (!fetchedData.length) {
+            resultDiv.innerHTML = "<p class=\"error-msg\">Superhero not found</p>"
+            return;
+        }
+
+        resultDiv.innerHTML = name !== "" ? fetchedData.map(entry => `
+        <h2>${entry.name}</h2>
+        <h3>A.K.A ${entry.alias}</h3>
+        <article><p>${entry.biography}</p></article>
+        `).join("") : (`
+        <ul>
+        ${fetchedData.map(entry => `<li>${entry.alias}</li>`).join("")}
+        </ul>
+        `)
+    })
+})()

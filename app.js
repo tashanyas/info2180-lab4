@@ -19,7 +19,7 @@ window.onload = function(){
                 result.innerHTML = response;
             }
             else{
-                result.innerHTML = "Error: This resquest can not be deliver. Please try again.";
+                result.innerHTML = "Error: This resquest cannot be delivered.";
             }
         }
     }
